@@ -1,0 +1,26 @@
+data:
+  image: busybox:latest
+  volumes:
+    - /data
+    - /var/lib/postgresql/data
+  entrypoint: /bin/echo
+
+redis:
+  image: redis:3.0
+  volumes_from:
+    - data
+#  restart: always
+
+postgres:
+  image: zakarfin/oskari-db
+  volumes_from:
+    - data
+#  restart: always
+
+oskari-server:
+  image: zakarfin/oskari-server
+  links:
+    - postgres
+    - redis
+  ports:
+    - "9999:8080"

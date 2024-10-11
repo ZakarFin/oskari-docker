@@ -1,26 +1,27 @@
-data:
-  image: busybox:latest
-  volumes:
-    - /data
-    - /var/lib/postgresql/data
-  entrypoint: /bin/echo
+services:
+  oskari-db:
+    image: postgis/postgis
+    # ports:
+    #   - 5432:5432
+    environment:
+      - POSTGRES_USER=oskari
+      - POSTGRES_PASSWORD=oskari
+      - POSTGRES_DB=oskaridb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U oskari -d oskaridb"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
-redis:
-  image: redis:3.0
-  volumes_from:
-    - data
-#  restart: always
+  oskari-redis:
+    image: redis
 
-postgres:
-  image: zakarfin/oskari-db
-  volumes_from:
-    - data
-#  restart: always
-
-oskari-server:
-  image: zakarfin/oskari-server
-  links:
-    - postgres
-    - redis
-  ports:
-    - "9999:8080"
+  oskari:
+    build: .
+    ports:
+      - 8080:8080
+    depends_on:
+      oskari-db:
+        condition: service_healthy
+        restart: true
